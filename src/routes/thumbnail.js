@@ -47,9 +47,9 @@ async function routes(fastify, options) {
     // Stream thumbnail
     const stream = fs.createReadStream(thumbnailPath);
 
-    reply
+    return reply
       .code(200)
-      .header('Content-Type', 'image/jpeg')
+      .type('image/jpeg')
       .header('Cache-Control', 'public, max-age=86400') // Cache for 24 hours
       .send(stream);
   });
