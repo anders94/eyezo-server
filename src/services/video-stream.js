@@ -25,12 +25,11 @@ async function streamVideo(reply, filePath, rangeHeader) {
     // Create read stream for partial content
     const stream = fs.createReadStream(filePath, { start, end });
 
-    reply
+    return reply
       .code(206)
       .header('Content-Range', `bytes ${start}-${end}/${fileSize}`)
       .header('Accept-Ranges', 'bytes')
-      .header('Content-Length', chunkSize)
-      .header('Content-Type', mimeType)
+      .type(mimeType)
       .header('Cache-Control', 'public, max-age=3600')
       .send(stream);
 
@@ -38,11 +37,10 @@ async function streamVideo(reply, filePath, rangeHeader) {
     // Full file stream (no range request)
     const stream = fs.createReadStream(filePath);
 
-    reply
+    return reply
       .code(200)
       .header('Accept-Ranges', 'bytes')
-      .header('Content-Length', fileSize)
-      .header('Content-Type', mimeType)
+      .type(mimeType)
       .header('Cache-Control', 'public, max-age=3600')
       .send(stream);
   }
