@@ -14,6 +14,11 @@ A lightweight, standards-driven Node.js video server that serves video files fro
 - **System File Filtering**: Automatically excludes .DS_Store, Thumbs.db, hidden files, etc.
 - **Directory-first**: Always reads directly from filesystem (no filename caching)
 
+## Clients
+
+- [video-client-ios](https://github.com/anders94/video-client-ios)
+- [video-client-tvos](https://github.com/anders94/video-client-tvos)
+
 ## Prerequisites
 
 - Node.js 16+
