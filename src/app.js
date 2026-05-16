@@ -7,17 +7,34 @@ async function createApp(videoRoot) {
   // Create Fastify instance with logger
   const app = fastify({
     logger: {
+      level: 'info',
       transport: {
         target: 'pino-pretty',
         options: {
           translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-          colorize: true
+          ignore: 'pid,hostname,reqId,req,res,responseTime',
+          colorize: true,
+          singleLine: true
         }
       }
     },
+    disableRequestLogging: true, // Disable default request logging
     // Increase body size limit for future POST endpoints
     bodyLimit: 1048576 // 1MB
+  });
+
+  // Custom request logging - one line per request
+  app.addHook('onRequest', (request, reply, done) => {
+    request.startTime = Date.now();
+    done();
+  });
+
+  app.addHook('onResponse', (request, reply, done) => {
+    const { method, url, startTime } = request;
+    const { statusCode } = reply;
+    const responseTime = (Date.now() - startTime).toFixed(2);
+    request.log.info(`${method} ${url} → ${statusCode} (${responseTime}ms)`);
+    done();
   });
 
   // Store video root in app instance for access in routes

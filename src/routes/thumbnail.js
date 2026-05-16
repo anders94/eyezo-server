@@ -35,12 +35,12 @@ async function routes(fastify, options) {
       throw error;
     }
 
-    // Generate thumbnail if it doesn't exist (lazy generation)
+    // Generate thumbnail if it doesn't exist (lazy generation with queue)
     let thumbnailPath;
     try {
-      thumbnailPath = await generateAndCacheThumbnail(db, absolutePath, relativePath);
+      thumbnailPath = await generateAndCacheThumbnail(db, absolutePath, relativePath, request.log);
     } catch (error) {
-      request.log.error({ err: error, video: relativePath }, 'Failed to generate thumbnail');
+      request.log.error(`Failed to generate thumbnail for ${relativePath}: ${error.message}`);
       throw new NotFoundError('Failed to generate thumbnail');
     }
 

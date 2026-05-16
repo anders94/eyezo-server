@@ -131,7 +131,7 @@ async function scanDirectory(videoRoot, absolutePath, relativePath, db) {
 
     // Generate thumbnail if not already generated
     try {
-      await generateAndCacheThumbnail(db, video.path, video.relativePath);
+      await generateAndCacheThumbnail(db, video.path, video.relativePath, null);
       thumbnailsGenerated++;
     } catch (error) {
       // Log but continue

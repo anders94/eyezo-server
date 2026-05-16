@@ -46,11 +46,21 @@ function createSchema(db) {
       bitrate INTEGER,
       has_thumbnail INTEGER DEFAULT 0,
       thumbnail_path TEXT,
+      thumbnail_failed INTEGER DEFAULT 0,
+      thumbnail_error TEXT,
       last_scanned INTEGER,
       created_at INTEGER DEFAULT (unixepoch()),
       updated_at INTEGER DEFAULT (unixepoch())
     );
   `);
+
+  // Add thumbnail_failed column if it doesn't exist (migration)
+  const columns = db.pragma('table_info(videos)');
+  const hasThumbnailFailed = columns.some(col => col.name === 'thumbnail_failed');
+  if (!hasThumbnailFailed) {
+    db.exec('ALTER TABLE videos ADD COLUMN thumbnail_failed INTEGER DEFAULT 0');
+    db.exec('ALTER TABLE videos ADD COLUMN thumbnail_error TEXT');
+  }
 
   // Create indexes
   db.exec(`

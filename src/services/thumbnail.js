@@ -10,6 +10,7 @@ const {
   THUMBNAIL_TIMESTAMP_PERCENT
 } = require('../config/constants');
 const { getVideoDuration } = require('./metadata');
+const { thumbnailQueue } = require('./thumbnail-queue');
 
 // Thumbnail directory: ~/.local/video-server/thumbnails/
 const THUMBNAIL_DIR = path.join(os.homedir(), '.local', 'video-server', 'thumbnails');
@@ -36,7 +37,7 @@ function getThumbnailPath(relativePath) {
   return path.join(THUMBNAIL_DIR, getThumbnailFilename(relativePath));
 }
 
-// Check if thumbnail exists
+// Check if thumbnail exists on disk
 async function thumbnailExists(relativePath) {
   const thumbnailPath = getThumbnailPath(relativePath);
   try {
@@ -47,58 +48,127 @@ async function thumbnailExists(relativePath) {
   }
 }
 
-// Generate thumbnail for a video
-async function generateThumbnail(videoPath, relativePath) {
+// Check database for thumbnail status (success or failure)
+function checkThumbnailStatus(db, relativePath) {
+  const result = db.prepare(`
+    SELECT has_thumbnail, thumbnail_failed, thumbnail_error, thumbnail_path
+    FROM videos
+    WHERE relative_path = ?
+  `).get(relativePath);
+
+  return result || { has_thumbnail: 0, thumbnail_failed: 0 };
+}
+
+// Record thumbnail generation failure
+function recordThumbnailFailure(db, relativePath, absolutePath, errorMessage) {
+  db.prepare(`
+    INSERT INTO videos (relative_path, absolute_path, thumbnail_failed, thumbnail_error, updated_at)
+    VALUES (?, ?, 1, ?, unixepoch())
+    ON CONFLICT(relative_path) DO UPDATE SET
+      thumbnail_failed = 1,
+      thumbnail_error = ?,
+      updated_at = unixepoch()
+  `).run(relativePath, absolutePath, errorMessage, errorMessage);
+}
+
+// Record thumbnail generation success
+function recordThumbnailSuccess(db, relativePath, absolutePath, thumbnailPath) {
+  db.prepare(`
+    INSERT INTO videos (relative_path, absolute_path, has_thumbnail, thumbnail_path, thumbnail_failed, updated_at)
+    VALUES (?, ?, 1, ?, 0, unixepoch())
+    ON CONFLICT(relative_path) DO UPDATE SET
+      has_thumbnail = 1,
+      thumbnail_path = ?,
+      thumbnail_failed = 0,
+      thumbnail_error = NULL,
+      updated_at = unixepoch()
+  `).run(relativePath, absolutePath, thumbnailPath, thumbnailPath);
+}
+
+// Generate thumbnail for a video (internal, not queued)
+async function _generateThumbnailInternal(videoPath, relativePath) {
   await ensureThumbnailDirectory();
 
   const thumbnailPath = getThumbnailPath(relativePath);
 
-  // Check if thumbnail already exists
+  // Check if thumbnail already exists on disk
   if (await thumbnailExists(relativePath)) {
     return thumbnailPath;
   }
 
-  try {
-    // Get video duration
-    const duration = await getVideoDuration(videoPath);
-    const timestamp = Math.max(1, duration * THUMBNAIL_TIMESTAMP_PERCENT);
+  // Get video duration
+  const duration = await getVideoDuration(videoPath);
+  const timestamp = Math.max(1, duration * THUMBNAIL_TIMESTAMP_PERCENT);
 
-    // Generate thumbnail
-    return new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .screenshots({
-          timestamps: [timestamp],
-          filename: getThumbnailFilename(relativePath),
-          folder: THUMBNAIL_DIR,
-          size: `${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT}`
-        })
-        .on('end', () => resolve(thumbnailPath))
-        .on('error', (err) => reject(new Error(`Thumbnail generation failed: ${err.message}`)));
-    });
-  } catch (error) {
-    throw new Error(`Failed to generate thumbnail: ${error.message}`);
-  }
+  // Generate thumbnail
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .screenshots({
+        timestamps: [timestamp],
+        filename: getThumbnailFilename(relativePath),
+        folder: THUMBNAIL_DIR,
+        size: `${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT}`
+      })
+      .on('end', () => resolve(thumbnailPath))
+      .on('error', (err) => reject(new Error(`FFmpeg failed: ${err.message}`)));
+  });
 }
 
-// Generate thumbnail and update database
-async function generateAndCacheThumbnail(db, videoPath, relativePath) {
-  try {
-    const thumbnailPath = await generateThumbnail(videoPath, relativePath);
+// Generate thumbnail with queuing and caching
+async function generateAndCacheThumbnail(db, videoPath, relativePath, logger) {
+  // Check database for previous attempts
+  const status = checkThumbnailStatus(db, relativePath);
 
-    // Update database
-    const { updateThumbnailStatus } = require('./database');
-    updateThumbnailStatus(db, relativePath, true, thumbnailPath);
+  // If thumbnail exists, return it
+  if (status.has_thumbnail && status.thumbnail_path) {
+    if (await thumbnailExists(relativePath)) {
+      return status.thumbnail_path;
+    }
+  }
+
+  // If generation previously failed, don't retry
+  if (status.thumbnail_failed) {
+    throw new Error(status.thumbnail_error || 'Thumbnail generation previously failed');
+  }
+
+  // Use queue to limit concurrent generation
+  try {
+    const thumbnailPath = await thumbnailQueue.enqueue(relativePath, async () => {
+      // Double-check it wasn't just generated by another request
+      if (await thumbnailExists(relativePath)) {
+        return getThumbnailPath(relativePath);
+      }
+
+      if (logger) {
+        const queueStatus = thumbnailQueue.getStatus();
+        logger.info(`Generating thumbnail for ${relativePath} (queue: ${queueStatus.running}/${queueStatus.queued})`);
+      }
+
+      // Generate the thumbnail
+      return await _generateThumbnailInternal(videoPath, relativePath);
+    });
+
+    // Record success in database
+    recordThumbnailSuccess(db, relativePath, videoPath, thumbnailPath);
 
     return thumbnailPath;
   } catch (error) {
+    // Record failure in database
+    const errorMessage = error.message || 'Unknown error';
+    recordThumbnailFailure(db, relativePath, videoPath, errorMessage);
+
+    if (logger) {
+      logger.error(`Thumbnail generation failed for ${relativePath}: ${errorMessage}`);
+    }
+
     throw error;
   }
 }
 
 module.exports = {
-  generateThumbnail,
   generateAndCacheThumbnail,
   thumbnailExists,
   getThumbnailPath,
+  checkThumbnailStatus,
   THUMBNAIL_DIR
 };
