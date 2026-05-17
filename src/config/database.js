@@ -62,6 +62,14 @@ function createSchema(db) {
     db.exec('ALTER TABLE videos ADD COLUMN thumbnail_error TEXT');
   }
 
+  // Add watch progress columns if they don't exist (migration)
+  const hasWatchPosition = columns.some(col => col.name === 'watch_position');
+  if (!hasWatchPosition) {
+    db.exec('ALTER TABLE videos ADD COLUMN watch_position REAL DEFAULT 0');
+    db.exec('ALTER TABLE videos ADD COLUMN watch_duration REAL DEFAULT 0');
+    db.exec('ALTER TABLE videos ADD COLUMN last_watched INTEGER DEFAULT 0');
+  }
+
   // Create indexes
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_videos_relative_path ON videos(relative_path);

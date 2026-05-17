@@ -148,6 +148,40 @@ function getRecentScans(db, limit = 10) {
   `).all(limit);
 }
 
+// Update watch progress for a video
+function updateWatchProgress(db, relativePath, absolutePath, position, duration) {
+  return db.prepare(`
+    INSERT INTO videos (relative_path, absolute_path, watch_position, watch_duration, last_watched, updated_at)
+    VALUES (?, ?, ?, ?, unixepoch(), unixepoch())
+    ON CONFLICT(relative_path) DO UPDATE SET
+      watch_position = ?,
+      watch_duration = ?,
+      last_watched = unixepoch(),
+      updated_at = unixepoch()
+  `).run(relativePath, absolutePath, position, duration, position, duration);
+}
+
+// Get watch progress for a video
+function getWatchProgress(db, relativePath) {
+  return db.prepare(`
+    SELECT watch_position, watch_duration, last_watched
+    FROM videos
+    WHERE relative_path = ?
+  `).get(relativePath);
+}
+
+// Clear watch progress for a video (mark as unwatched)
+function clearWatchProgress(db, relativePath) {
+  return db.prepare(`
+    UPDATE videos
+    SET watch_position = 0,
+        watch_duration = 0,
+        last_watched = 0,
+        updated_at = unixepoch()
+    WHERE relative_path = ?
+  `).run(relativePath);
+}
+
 module.exports = {
   getVideoMetadata,
   upsertVideoMetadata,
@@ -158,5 +192,8 @@ module.exports = {
   setConfig,
   startScan,
   completeScan,
-  getRecentScans
+  getRecentScans,
+  updateWatchProgress,
+  getWatchProgress,
+  clearWatchProgress
 };

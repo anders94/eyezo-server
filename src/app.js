@@ -77,6 +77,7 @@ async function createApp(videoRoot) {
   await app.register(require('./routes/video'));
   await app.register(require('./routes/thumbnail'));
   await app.register(require('./routes/metadata'));
+  await app.register(require('./routes/watch-progress'));
 
   return app;
 }

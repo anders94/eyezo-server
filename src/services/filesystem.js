@@ -62,7 +62,8 @@ async function readDirectory(absolutePath, relativePath, videoRoot, db) {
 
         // Try to get cached metadata from database
         const metadata = db.prepare(`
-          SELECT duration, width, height, codec, bitrate, has_thumbnail
+          SELECT duration, width, height, codec, bitrate, has_thumbnail,
+                 watch_position, last_watched
           FROM videos
           WHERE relative_path = ?
         `).get(entryRelativePath);
@@ -74,6 +75,10 @@ async function readDirectory(absolutePath, relativePath, videoRoot, db) {
           videoInfo.codec = metadata.codec;
           videoInfo.bitrate = metadata.bitrate;
           videoInfo.hasThumbnail = Boolean(metadata.has_thumbnail);
+
+          // Add watch progress information
+          videoInfo.watchPosition = metadata.watch_position || 0;
+          videoInfo.lastWatched = metadata.last_watched || 0;
         }
 
         videos.push(videoInfo);

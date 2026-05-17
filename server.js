@@ -52,14 +52,17 @@ async function start() {
     console.log(`API base URL: http://${host}:${port}/api`);
     console.log('');
     console.log('Available endpoints:');
-    console.log(`  GET  /api/health          - Health check`);
-    console.log(`  GET  /api/config          - Server configuration`);
-    console.log(`  GET  /api/browse          - Browse root directory`);
-    console.log(`  GET  /api/browse/*        - Browse subdirectory`);
-    console.log(`  GET  /api/video/*         - Stream video file`);
-    console.log(`  GET  /api/thumbnail/*     - Get video thumbnail`);
-    console.log(`  GET  /api/metadata/*      - Get video metadata`);
-    console.log(`  POST /api/scan            - Trigger metadata/thumbnail scan`);
+    console.log(`  GET    /api/health          - Health check`);
+    console.log(`  GET    /api/config          - Server configuration`);
+    console.log(`  GET    /api/browse          - Browse root directory`);
+    console.log(`  GET    /api/browse/*        - Browse subdirectory`);
+    console.log(`  GET    /api/video/*         - Stream video file`);
+    console.log(`  GET    /api/thumbnail/*     - Get video thumbnail`);
+    console.log(`  GET    /api/metadata/*      - Get video metadata`);
+    console.log(`  POST   /api/scan            - Trigger metadata/thumbnail scan`);
+    console.log(`  POST   /api/watch-progress  - Update watch position`);
+    console.log(`  GET    /api/watch-progress/* - Get watch progress`);
+    console.log(`  DELETE /api/watch-progress/* - Clear watch progress`);
     console.log('');
     console.log('Press Ctrl+C to stop the server');
   } catch (error) {
