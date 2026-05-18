@@ -12,8 +12,8 @@ const {
 const { getVideoDuration } = require('./metadata');
 const { thumbnailQueue } = require('./thumbnail-queue');
 
-// Thumbnail directory: ~/.local/video-server/thumbnails/
-const THUMBNAIL_DIR = path.join(os.homedir(), '.local', 'video-server', 'thumbnails');
+// Thumbnail directory: ~/.local/eyezo-server/thumbnails/
+const THUMBNAIL_DIR = path.join(os.homedir(), '.local', 'eyezo-server', 'thumbnails');
 
 // Ensure thumbnail directory exists
 async function ensureThumbnailDirectory() {

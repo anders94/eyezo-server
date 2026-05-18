@@ -3,8 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// Database path in ~/.local/video-server/database.sqlite
-const DB_DIR = path.join(os.homedir(), '.local', 'video-server');
+// Database path in ~/.local/eyezo-server/database.sqlite
+const DB_DIR = path.join(os.homedir(), '.local', 'eyezo-server');
 const DB_PATH = path.join(DB_DIR, 'database.sqlite');
 
 // Ensure database directory exists

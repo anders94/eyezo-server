@@ -1,4 +1,4 @@
-# Video Server
+# Eyezo Server
 
 A lightweight, standards-driven Node.js video server that serves video files from a directory tree via REST API with HTTP range request support for streaming to iOS and web clients.
 
@@ -16,8 +16,8 @@ A lightweight, standards-driven Node.js video server that serves video files fro
 
 ## Clients
 
-- [video-client-ios](https://github.com/anders94/video-client-ios)
-- [video-client-tvos](https://github.com/anders94/video-client-tvos)
+- [eyezo-ios](https://github.com/anders94/eyezo-ios)
+- [eyezo-tvos](https://github.com/anders94/eyezo-tvos)
 
 ## Prerequisites
 
@@ -141,7 +141,7 @@ Thumbnails are:
 - Generated lazily on first request
 - Extracted at 1% into the video
 - 320x180 resolution
-- Cached in `~/.local/video-server/thumbnails/`
+- Cached in `~/.local/eyezo-server/thumbnails/`
 
 ### Metadata
 
@@ -186,7 +186,7 @@ This endpoint:
 ## Data Storage
 
 ### Database
-SQLite database stored at: `~/.local/video-server/database.sqlite`
+SQLite database stored at: `~/.local/eyezo-server/database.sqlite`
 
 Contains:
 - Video metadata (duration, resolution, codec, bitrate)
@@ -195,7 +195,7 @@ Contains:
 - Scan history
 
 ### Thumbnails
-Thumbnail cache stored at: `~/.local/video-server/thumbnails/`
+Thumbnail cache stored at: `~/.local/eyezo-server/thumbnails/`
 
 Filenames are MD5 hashes of the video's relative path.
 
@@ -366,7 +366,7 @@ If you get database locked errors, ensure only one instance of the server is run
 ## Project Structure
 
 ```
-video-server/
+eyezo-server/
 ├── package.json
 ├── README.md
 ├── .gitignore

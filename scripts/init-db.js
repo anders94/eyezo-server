@@ -2,7 +2,7 @@
 
 const { getDatabase, closeDatabase, DB_PATH } = require('../src/config/database');
 
-console.log('Initializing video server database...');
+console.log('Initializing Eyezo Server database...');
 console.log(`Database location: ${DB_PATH}`);
 
 try {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The video server now includes an intelligent thumbnail generation system with:
+Eyezo Server includes an intelligent thumbnail generation system with:
 - **Lazy generation**: Thumbnails are created only when requested
 - **Failure tracking**: Bad/corrupted videos are recorded to avoid repeated attempts
 - **Concurrent limiting**: Maximum 2 thumbnails generated at once

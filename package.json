@@ -1,5 +1,5 @@
 {
-  "name": "video-server",
+  "name": "eyezo-server",
   "version": "1.0.0",
   "description": "Lightweight Node.js video server that serves directory trees via REST API with HTTP range request support",
   "main": "server.js",

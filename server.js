@@ -12,7 +12,7 @@ if (args.length === 0) {
   console.error('\nUsage: node server.js <video-directory-path>');
   console.error('Example: node server.js /Users/anders/Videos');
   console.error('\nDescription:');
-  console.error('  Starts a lightweight video server that serves files from the specified directory.');
+  console.error('  Starts Eyezo Server to serve videos from the specified directory.');
   console.error('  The directory tree is read-only and will not be modified.');
   process.exit(1);
 }
@@ -33,10 +33,10 @@ if (!stats.isDirectory()) {
 }
 
 // Start server
-console.log('Video Server Configuration:');
+console.log('Eyezo Server Configuration:');
 console.log(`  Video Directory: ${videoRoot}`);
-console.log(`  Database: ~/.local/video-server/database.sqlite`);
-console.log(`  Thumbnails: ~/.local/video-server/thumbnails/`);
+console.log(`  Database: ~/.local/eyezo-server/database.sqlite`);
+console.log(`  Thumbnails: ~/.local/eyezo-server/thumbnails/`);
 console.log('');
 
 async function start() {

@@ -1,4 +1,4 @@
-// Base error class for video server errors
+// Base error class for Eyezo Server errors
 class VideoServerError extends Error {
   constructor(message, statusCode = 500, code = 'INTERNAL_ERROR') {
     super(message);

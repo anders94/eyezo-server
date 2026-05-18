@@ -2,7 +2,7 @@
 
 ## Overview
 
-The video server tracks watch progress for videos, allowing clients to:
+Eyezo Server tracks watch progress for videos, allowing clients to:
 - Report their current playback position
 - Resume playback from where they left off
 - Display progress indicators

@@ -29,7 +29,7 @@ async function routes(fastify, options) {
   // Root redirect
   fastify.get('/', async (request, reply) => {
     return {
-      message: 'Video Server API',
+      message: 'Eyezo Server API',
       version: '1.0.0',
       endpoints: {
         health: '/api/health',
@@ -40,7 +40,7 @@ async function routes(fastify, options) {
         metadata: '/api/metadata/*',
         scan: 'POST /api/scan'
       },
-      documentation: 'https://github.com/video-server'
+      documentation: 'https://github.com/anders94/eyezo-server'
     };
   });
 }
