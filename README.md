@@ -18,6 +18,7 @@ A lightweight, standards-driven Node.js video server that serves video files fro
 
 - [eyezo-ios](https://github.com/anders94/eyezo-ios)
 - [eyezo-tvos](https://github.com/anders94/eyezo-tvos)
+- [eyezo-visionos](https://github.com/anders94/eyezo-visionos)
 
 ## Prerequisites
 
