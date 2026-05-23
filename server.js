@@ -65,6 +65,10 @@ async function start() {
     console.log(`  DELETE /api/watch-progress/* - Clear watch progress`);
     console.log('');
     console.log('Press Ctrl+C to stop the server');
+
+    // Start background thumbnail retry process
+    const { startThumbnailRetry } = require('./src/services/thumbnail-retry');
+    startThumbnailRetry(videoRoot, app.log);
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
