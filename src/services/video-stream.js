@@ -29,6 +29,7 @@ async function streamVideo(reply, filePath, rangeHeader) {
       .code(206)
       .header('Content-Range', `bytes ${start}-${end}/${fileSize}`)
       .header('Accept-Ranges', 'bytes')
+      .header('Content-Length', chunkSize)
       .type(mimeType)
       .header('Cache-Control', 'public, max-age=3600')
       .send(stream);
@@ -40,6 +41,7 @@ async function streamVideo(reply, filePath, rangeHeader) {
     return reply
       .code(200)
       .header('Accept-Ranges', 'bytes')
+      .header('Content-Length', fileSize)
       .type(mimeType)
       .header('Cache-Control', 'public, max-age=3600')
       .send(stream);

@@ -103,14 +103,17 @@ async function _generateThumbnailInternal(videoPath, relativePath) {
   // Generate thumbnail
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
-      .screenshots({
-        timestamps: [timestamp],
-        filename: getThumbnailFilename(relativePath),
-        folder: THUMBNAIL_DIR,
-        size: `${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT}`
-      })
+      .inputOptions(['-ss', timestamp.toString()])
+      .outputOptions([
+        '-vf', `scale=${THUMBNAIL_WIDTH}:${THUMBNAIL_HEIGHT}:force_original_aspect_ratio=decrease`,
+        '-frames:v', '1',
+        '-map', '0:v:0',  // Select first video stream only
+        '-q:v', '2'       // High quality JPEG (2 is high, 31 is low)
+      ])
+      .output(thumbnailPath)
       .on('end', () => resolve(thumbnailPath))
-      .on('error', (err) => reject(new Error(`FFmpeg failed: ${err.message}`)));
+      .on('error', (err) => reject(new Error(`FFmpeg failed: ${err.message}`)))
+      .run();  // Actually execute the FFmpeg command
   });
 }
 

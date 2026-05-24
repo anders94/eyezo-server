@@ -45,11 +45,13 @@ async function routes(fastify, options) {
     }
 
     // Stream thumbnail
+    const thumbnailStats = await fs.promises.stat(thumbnailPath);
     const stream = fs.createReadStream(thumbnailPath);
 
     return reply
       .code(200)
       .type('image/jpeg')
+      .header('Content-Length', thumbnailStats.size)
       .header('Cache-Control', 'public, max-age=86400') // Cache for 24 hours
       .send(stream);
   });
