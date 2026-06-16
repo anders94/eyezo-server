@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EyeZo — A private screening room for your own videos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --room:      #111319;
+      --room-2:    #161922;
+      --room-3:    #1c2029;
+      --ink:       #ECE6D9;
+      --ink-dim:   #9A9EA8;
+      --ink-faint: #5A5E68;
+      --glow:      #F2A65A;
+      --glow-2:    #F6C083;
+      --line:      rgba(236,230,217,0.09);
+      --line-2:    rgba(236,230,217,0.05);
+      --maxw:      1400px;
+      --pad:       clamp(20px, 4vw, 48px);
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{
+      background:var(--room);
+      color:var(--ink);
+      font-family:"Hanken Grotesk", system-ui, sans-serif;
+      font-size:16px;
+      line-height:1.6;
+      letter-spacing:0.005em;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      min-height:100vh;
+    }
+    /* warm screen-glow blooming behind the header, the eyezo.com signature */
+    body::before{
+      content:"";
+      position:fixed;
+      left:50%; top:-120px;
+      width:min(920px,110vw); height:420px;
+      transform:translateX(-50%);
+      z-index:0;
+      pointer-events:none;
+      background:radial-gradient(60% 58% at 50% 50%, rgba(246,192,131,0.12), rgba(242,166,90,0.05) 42%, rgba(242,166,90,0) 72%);
+      filter:blur(14px);
+    }
+    a{ color:inherit; }
+
+    header{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; gap:20px;
+      padding:18px var(--pad);
+      border-bottom:1px solid var(--line);
+      background:rgba(17,19,25,0.86);
+      backdrop-filter:blur(10px);
+    }
+    .mark{
+      font-family:"Fraunces", Georgia, serif;
+      font-weight:600;
+      font-size:22px;
+      letter-spacing:-0.01em;
+      display:inline-flex; align-items:center; gap:9px;
+      flex:none;
+      text-decoration:none;
+      cursor:pointer;
+    }
+    .mark .lens{
+      width:13px; height:13px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, var(--glow-2), var(--glow) 55%, #8a5418 100%);
+      box-shadow:0 0 14px 1px rgba(242,166,90,0.55);
+      flex:none;
+    }
+
+    nav.breadcrumb{
+      display:flex; flex-wrap:wrap; align-items:center; gap:2px;
+      font-family:"JetBrains Mono", monospace;
+      font-size:13px; letter-spacing:0.02em;
+      color:var(--ink-dim);
+      overflow:hidden;
+    }
+    nav.breadcrumb a{
+      color:var(--ink-dim);
+      cursor:pointer;
+      text-decoration:none;
+      padding:4px 7px;
+      border-radius:7px;
+      white-space:nowrap;
+      transition:color .2s ease, background .2s ease;
+    }
+    nav.breadcrumb a:hover{ color:var(--glow); background:rgba(242,166,90,0.06); }
+    nav.breadcrumb .sep{ color:var(--ink-faint); }
+
+    main{ padding:32px var(--pad) 80px; max-width:var(--maxw); margin:0 auto; position:relative; z-index:2; }
+
+    .section-title{
+      font-family:"JetBrains Mono", monospace;
+      font-size:12px; font-weight:500;
+      letter-spacing:0.22em;
+      text-transform:uppercase;
+      color:var(--glow);
+      display:inline-flex; align-items:center; gap:0.7em;
+      margin:6px 2px 16px;
+    }
+    .section-title::before{
+      content:"";
+      width:7px; height:7px; border-radius:50%;
+      background:var(--glow);
+      box-shadow:0 0 10px 1px var(--glow);
+    }
+    .section-title + .section-title{ margin-top:8px; }
+
+    .folders{ display:flex; flex-wrap:wrap; gap:11px; margin-bottom:40px; }
+    .folder{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:11px 17px;
+      background:var(--room-2);
+      border:1px solid var(--line);
+      border-radius:13px;
+      cursor:pointer;
+      font-size:14px;
+      color:var(--ink);
+      transition:border-color .25s ease, transform .2s ease, background .25s ease;
+    }
+    .folder:hover{ border-color:rgba(242,166,90,0.5); background:rgba(242,166,90,0.06); transform:translateY(-2px); }
+    .folder .ico{ display:flex; color:var(--glow); flex:none; }
+    .folder .ico svg{ width:18px; height:18px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+      gap:18px;
+    }
+    .card{
+      background:var(--room-2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:border-color .25s ease, transform .2s ease;
+    }
+    .card:hover{ border-color:rgba(242,166,90,0.5); transform:translateY(-2px); }
+    .thumb{
+      position:relative;
+      width:100%;
+      aspect-ratio:16 / 9;
+      background:var(--room);
+      display:block;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .thumb .placeholder{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--ink-faint);
+    }
+    .thumb .placeholder svg{ width:34px; height:34px; }
+    .badge{
+      position:absolute;
+      bottom:7px; right:7px;
+      background:rgba(17,19,25,0.82);
+      border:1px solid var(--line);
+      color:var(--ink);
+      font-family:"JetBrains Mono", monospace;
+      font-size:11px;
+      padding:2px 7px;
+      border-radius:6px;
+    }
+    .progress-bar{
+      position:absolute;
+      bottom:0; left:0;
+      height:3px;
+      background:linear-gradient(90deg, var(--glow-2), var(--glow));
+      box-shadow:0 0 8px 0 rgba(242,166,90,0.6);
+    }
+    .meta{ padding:12px 14px 14px; }
+    .meta .name{
+      font-family:"Fraunces", Georgia, serif;
+      font-weight:500;
+      font-size:15px;
+      line-height:1.25;
+      word-break:break-word;
+      margin-bottom:5px;
+    }
+    .meta .sub{
+      font-family:"JetBrains Mono", monospace;
+      font-size:11px;
+      letter-spacing:0.02em;
+      color:var(--ink-faint);
+    }
+    .empty, .error{
+      color:var(--ink-dim);
+      padding:60px 10px;
+      text-align:center;
+      font-size:15px;
+    }
+    .error{ color:#e8825a; }
+
+    /* ---------- player overlay ---------- */
+    .overlay{
+      position:fixed; inset:0;
+      background:rgba(8,9,12,0.92);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:100;
+      padding:24px;
+    }
+    .overlay.open{ display:flex; }
+    .player-box{
+      width:100%; max-width:1100px;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .player-head{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+    }
+    .player-head .title{
+      font-family:"Fraunces", Georgia, serif;
+      font-weight:500;
+      font-size:18px;
+      word-break:break-word;
+    }
+    .close-btn{
+      font-family:"JetBrains Mono", monospace;
+      font-size:13px; letter-spacing:0.03em;
+      background:transparent;
+      border:1px solid var(--line);
+      color:var(--ink-dim);
+      border-radius:999px;
+      padding:10px 18px;
+      cursor:pointer;
+      flex:none;
+      transition:color .25s ease, border-color .25s ease, background .25s ease;
+    }
+    .close-btn:hover{ color:var(--ink); border-color:var(--ink-faint); background:rgba(242,166,90,0.05); }
+    video{
+      width:100%; max-height:78vh;
+      background:#000;
+      border:1px solid rgba(246,192,131,0.16);
+      border-radius:14px;
+      box-shadow:inset 0 0 70px rgba(242,166,90,0.05);
+    }
+
+    a:focus-visible, .close-btn:focus-visible, .folder:focus-visible, .card:focus-visible{
+      outline:2px solid var(--glow); outline-offset:3px; border-radius:8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="mark" id="homeMark"><span class="lens" aria-hidden="true"></span>EyeZo</span>
+    <nav class="breadcrumb" id="breadcrumb"></nav>
+  </header>
+  <main id="main">
+    <div class="empty">Loading…</div>
+  </main>
+
+  <div class="overlay" id="overlay">
+    <div class="player-box">
+      <div class="player-head">
+        <div class="title" id="playerTitle"></div>
+        <button class="close-btn" id="closeBtn">Close ✕</button>
+      </div>
+      <video id="player" controls playsinline></video>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var mainEl = document.getElementById('main');
+    var breadcrumbEl = document.getElementById('breadcrumb');
+    var overlayEl = document.getElementById('overlay');
+    var playerEl = document.getElementById('player');
+    var playerTitleEl = document.getElementById('playerTitle');
+    var closeBtn = document.getElementById('closeBtn');
+    var homeMark = document.getElementById('homeMark');
+
+    var currentVideo = null;   // { relativePath } of the open video
+    var saveTimer = null;
+
+    var FOLDER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>';
+    var FILM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 15h18M8 4v16M16 4v16"/></svg>';
+
+    function fmtDuration(sec) {
+      if (!sec || sec <= 0) return '';
+      sec = Math.round(sec);
+      var h = Math.floor(sec / 3600);
+      var m = Math.floor((sec % 3600) / 60);
+      var s = sec % 60;
+      var mm = (h > 0 && m < 10) ? '0' + m : '' + m;
+      var ss = s < 10 ? '0' + s : '' + s;
+      return (h > 0 ? h + ':' : '') + mm + ':' + ss;
+    }
+
+    function fmtSize(bytes) {
+      if (!bytes) return '';
+      var u = ['B', 'KB', 'MB', 'GB', 'TB'];
+      var i = 0;
+      var n = bytes;
+      while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+      return n.toFixed(n >= 10 || i === 0 ? 0 : 1) + ' ' + u[i];
+    }
+
+    // Build /api/<kind>/<segments> from an already-encoded urlPath.
+    function apiUrl(kind, urlPath) {
+      return '/api/' + kind + '/' + urlPath;
+    }
+
+    async function getJSON(url) {
+      var res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+      return res.json();
+    }
+
+    function renderBreadcrumb(path) {
+      breadcrumbEl.innerHTML = '';
+      // path looks like "/" or "/folder/subfolder"
+      var parts = (path || '/').split('/').filter(Boolean);
+      var crumbs = [{ label: 'Home', urlPath: '' }];
+      var acc = [];
+      parts.forEach(function (p) {
+        acc.push(encodeURIComponent(p));
+        crumbs.push({ label: p, urlPath: acc.join('/') });
+      });
+      crumbs.forEach(function (c, idx) {
+        if (idx > 0) {
+          var sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '/';
+          breadcrumbEl.appendChild(sep);
+        }
+        var a = document.createElement('a');
+        a.textContent = c.label;
+        a.onclick = function () { navigate(c.urlPath); };
+        breadcrumbEl.appendChild(a);
+      });
+    }
+
+    async function navigate(urlPath) {
+      mainEl.innerHTML = '<div class="empty">Loading…</div>';
+      var endpoint = urlPath ? apiUrl('browse', urlPath) : '/api/browse';
+      try {
+        var data = await getJSON(endpoint);
+        render(data);
+        if (window.history && window.history.pushState) {
+          window.history.pushState({ urlPath: urlPath }, '', urlPath ? '#/' + urlPath : '#/');
+        }
+      } catch (err) {
+        mainEl.innerHTML = '<div class="error">Failed to load: ' + err.message + '</div>';
+      }
+    }
+
+    function render(data) {
+      renderBreadcrumb(data.path);
+      mainEl.innerHTML = '';
+
+      var dirs = data.directories || [];
+      var vids = data.videos || [];
+
+      if (dirs.length) {
+        var dt = document.createElement('div');
+        dt.className = 'section-title';
+        dt.textContent = 'Folders';
+        mainEl.appendChild(dt);
+
+        var fwrap = document.createElement('div');
+        fwrap.className = 'folders';
+        dirs.forEach(function (d) {
+          var el = document.createElement('div');
+          el.className = 'folder';
+          el.tabIndex = 0;
+          var ico = document.createElement('span');
+          ico.className = 'ico';
+          ico.innerHTML = FOLDER_SVG;
+          el.appendChild(ico);
+          var label = document.createElement('span');
+          label.textContent = d.name;
+          el.appendChild(label);
+          el.onclick = function () { navigate(d.urlPath); };
+          el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(d.urlPath); } };
+          fwrap.appendChild(el);
+        });
+        mainEl.appendChild(fwrap);
+      }
+
+      if (vids.length) {
+        var vt = document.createElement('div');
+        vt.className = 'section-title';
+        vt.textContent = 'Videos (' + vids.length + ')';
+        mainEl.appendChild(vt);
+
+        var grid = document.createElement('div');
+        grid.className = 'grid';
+        vids.forEach(function (v) { grid.appendChild(videoCard(v)); });
+        mainEl.appendChild(grid);
+      }
+
+      if (!dirs.length && !vids.length) {
+        mainEl.innerHTML = '<div class="empty">This folder is empty.</div>';
+      }
+    }
+
+    function videoCard(v) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.tabIndex = 0;
+
+      var thumb = document.createElement('div');
+      thumb.className = 'thumb';
+
+      var ph = document.createElement('div');
+      ph.className = 'placeholder';
+      ph.innerHTML = FILM_SVG;
+      thumb.appendChild(ph);
+
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = v.name;
+      img.src = apiUrl('thumbnail', v.urlPath);
+      img.onerror = function () { img.style.display = 'none'; };
+      thumb.appendChild(img);
+
+      var dur = fmtDuration(v.duration);
+      if (dur) {
+        var badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = dur;
+        thumb.appendChild(badge);
+      }
+
+      // Resume progress bar if we have cached watch position + duration.
+      if (v.watchPosition && v.duration && v.watchPosition > 0) {
+        var pb = document.createElement('div');
+        pb.className = 'progress-bar';
+        pb.style.width = Math.min(100, (v.watchPosition / v.duration) * 100) + '%';
+        thumb.appendChild(pb);
+      }
+
+      card.appendChild(thumb);
+
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = v.name;
+      meta.appendChild(name);
+
+      var subBits = [];
+      if (v.width && v.height) subBits.push(v.width + '×' + v.height);
+      if (v.size) subBits.push(fmtSize(v.size));
+      if (subBits.length) {
+        var sub = document.createElement('div');
+        sub.className = 'sub';
+        sub.textContent = subBits.join('  ·  ');
+        meta.appendChild(sub);
+      }
+      card.appendChild(meta);
+
+      card.onclick = function () { openPlayer(v); };
+      card.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(v); } };
+      return card;
+    }
+
+    async function openPlayer(v) {
+      currentVideo = v;
+      playerTitleEl.textContent = v.name;
+      playerEl.src = apiUrl('video', v.urlPath);
+      overlayEl.classList.add('open');
+
+      // Resume from saved position.
+      var resumeAt = 0;
+      try {
+        var wp = await getJSON(apiUrl('watch-progress', v.urlPath));
+        if (wp && wp.position > 0) resumeAt = wp.position;
+      } catch (e) { /* ignore — fresh start */ }
+
+      if (resumeAt > 0) {
+        var seekOnce = function () {
+          try { playerEl.currentTime = resumeAt; } catch (e) {}
+          playerEl.removeEventListener('loadedmetadata', seekOnce);
+        };
+        playerEl.addEventListener('loadedmetadata', seekOnce);
+      }
+
+      playerEl.play().catch(function () { /* autoplay may be blocked; user can press play */ });
+      startProgressSaver();
+    }
+
+    function saveProgress() {
+      if (!currentVideo || !playerEl.currentTime) return;
+      var body = JSON.stringify({
+        path: currentVideo.relativePath,
+        position: playerEl.currentTime
+      });
+      // keepalive lets the final save survive page/overlay teardown.
+      fetch('/api/watch-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body,
+        keepalive: true
+      }).catch(function () {});
+    }
+
+    function startProgressSaver() {
+      stopProgressSaver();
+      saveTimer = setInterval(function () {
+        if (!playerEl.paused) saveProgress();
+      }, 5000);
+    }
+
+    function stopProgressSaver() {
+      if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+    }
+
+    function closePlayer() {
+      saveProgress();
+      stopProgressSaver();
+      playerEl.pause();
+      playerEl.removeAttribute('src');
+      playerEl.load();
+      overlayEl.classList.remove('open');
+      currentVideo = null;
+    }
+
+    playerEl.addEventListener('pause', saveProgress);
+    playerEl.addEventListener('ended', saveProgress);
+    closeBtn.onclick = closePlayer;
+    overlayEl.onclick = function (e) { if (e.target === overlayEl) closePlayer(); };
+    homeMark.onclick = function () { navigate(''); };
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlayEl.classList.contains('open')) closePlayer();
+    });
+
+    window.addEventListener('popstate', function (e) {
+      var urlPath = (e.state && e.state.urlPath) || urlPathFromHash();
+      navigate(urlPath);
+    });
+
+    function urlPathFromHash() {
+      var h = window.location.hash || '';
+      if (h.indexOf('#/') === 0) return h.slice(2);
+      return '';
+    }
+
+    // Initial load (honor a deep-linked hash if present).
+    navigate(urlPathFromHash());
+  })();
+  </script>
+</body>
+</html>
