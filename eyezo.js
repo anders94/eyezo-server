@@ -9,8 +9,8 @@ const args = process.argv.slice(2);
 
 if (args.length === 0) {
   console.error('Error: No video directory specified');
-  console.error('\nUsage: node server.js <video-directory-path>');
-  console.error('Example: node server.js /Users/anders/Videos');
+  console.error('\nUsage: eyezo <video-directory-path>');
+  console.error('Example: eyezo /Users/anders/Videos');
   console.error('\nDescription:');
   console.error('  Starts Eyezo Server to serve videos from the specified directory.');
   console.error('  The directory tree is read-only and will not be modified.');

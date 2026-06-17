@@ -1,11 +1,21 @@
 {
-  "name": "eyezo-server",
+  "name": "eyezo",
   "version": "1.0.0",
   "description": "Lightweight Node.js video server that serves directory trees via REST API with HTTP range request support",
-  "main": "server.js",
+  "main": "eyezo.js",
+  "bin": {
+    "eyezo": "eyezo.js"
+  },
+  "files": [
+    "eyezo.js",
+    "src",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node eyezo.js",
+    "dev": "nodemon eyezo.js",
     "init-db": "node scripts/init-db.js"
   },
   "keywords": [

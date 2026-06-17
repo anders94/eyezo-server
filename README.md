@@ -28,24 +28,34 @@ A lightweight, standards-driven Node.js video server that serves video files fro
   - Ubuntu/Debian: `apt install ffmpeg`
   - Windows: Download from https://ffmpeg.org/
 
-## Installation
+## Usage
+
+### Quick Start (npx)
+
+Run the server directly without installing — npx downloads it on first use:
+
+```bash
+npx eyezo /path/to/your/videos
+```
+
+### Installation
+
+To install from source:
 
 ```bash
 npm install
 ```
 
-## Usage
-
-### Starting the Server
+Then start the server:
 
 ```bash
-node server.js /path/to/your/videos
+node eyezo.js /path/to/your/videos
 ```
 
 The server will start on port 3000 by default. You can customize the port and host:
 
 ```bash
-PORT=8080 HOST=localhost node server.js /path/to/your/videos
+PORT=8080 HOST=localhost node eyezo.js /path/to/your/videos
 ```
 
 ### Development Mode (Auto-reload)
@@ -349,7 +359,7 @@ ffmpeg -version
 Change the port:
 
 ```bash
-PORT=8080 node server.js /path/to/videos
+PORT=8080 node eyezo.js /path/to/videos
 ```
 
 ### Permission Denied
@@ -371,7 +381,7 @@ eyezo-server/
 ├── package.json
 ├── README.md
 ├── .gitignore
-├── server.js                    # Entry point
+├── eyezo.js                     # Entry point
 ├── src/
 │   ├── app.js                   # Fastify app setup
 │   ├── config/
