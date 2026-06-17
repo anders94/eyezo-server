@@ -9,6 +9,7 @@
   "files": [
     "eyezo.js",
     "src",
+    "public",
     "scripts",
     "README.md",
     "LICENSE"
