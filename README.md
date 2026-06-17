@@ -5,6 +5,7 @@ A lightweight, standards-driven Node.js video server that serves video files fro
 ## Features
 
 - **Read-only file serving**: Serves video files without modifying the directory tree
+- **Built-in web UI**: Visit the server root in a browser to browse and play your videos — no extra setup
 - **REST API**: Clean REST endpoints for browsing directories and streaming videos
 - **HTTP Range Requests**: Full support for video seeking/scrubbing
 - **Thumbnail Generation**: Automatic thumbnail extraction at 1% into each video
@@ -63,6 +64,23 @@ PORT=8080 HOST=localhost node eyezo.js /path/to/your/videos
 ```bash
 npm run dev /path/to/your/videos
 ```
+
+## Web Interface
+
+Open the server's root URL in any browser to use the built-in web UI:
+
+```
+http://localhost:3000/
+```
+
+The UI is a single self-contained page (no build step) served from `public/index.html`. It lets you:
+
+- Browse folders with breadcrumb navigation
+- See a thumbnail grid with duration, resolution, and file size
+- Play videos in the browser, with seeking via HTTP range requests
+- Resume playback — watch progress is saved automatically and restored on reopen
+
+The root URL uses **content negotiation**: browsers (requests sending `Accept: text/html`) receive the web UI, while API clients receive the JSON API descriptor as before, so existing clients are unaffected.
 
 ## API Endpoints
 
@@ -194,6 +212,30 @@ This endpoint:
 - Generates thumbnails for all videos
 - Updates the database
 
+### Watch Progress
+
+```
+POST   /api/watch-progress       - Save playback position for a video
+GET    /api/watch-progress/*     - Get saved position for a video
+DELETE /api/watch-progress/*     - Clear saved position for a video
+```
+
+**Save body:**
+```json
+{ "path": "movies/action/movie.mp4", "position": 123.45 }
+```
+
+**Get response:**
+```json
+{
+  "path": "movies/action/movie.mp4",
+  "position": 123.45,
+  "lastWatched": 1715875300
+}
+```
+
+Used by the built-in web UI to resume playback where you left off. `position` is in seconds; a never-watched video returns `0`.
+
 ## Data Storage
 
 ### Database
@@ -228,6 +270,8 @@ Filenames are MD5 hashes of the video's relative path.
 ## Client Usage Examples
 
 ### Web Browser (HTML)
+
+The server ships with a [built-in web UI](#web-interface) — just open the root URL. The snippet below shows how to embed the video and thumbnail endpoints in your own page instead:
 
 ```html
 <!DOCTYPE html>
@@ -382,6 +426,8 @@ eyezo-server/
 ├── README.md
 ├── .gitignore
 ├── eyezo.js                     # Entry point
+├── public/
+│   └── index.html               # Built-in web UI (served at /)
 ├── src/
 │   ├── app.js                   # Fastify app setup
 │   ├── config/
@@ -392,7 +438,8 @@ eyezo-server/
 │   │   ├── browse.js            # Directory browsing
 │   │   ├── video.js             # Video streaming
 │   │   ├── thumbnail.js         # Thumbnail serving
-│   │   └── metadata.js          # Metadata and scanning
+│   │   ├── metadata.js          # Metadata and scanning
+│   │   └── watch-progress.js    # Watch progress save/resume
 │   ├── services/
 │   │   ├── filesystem.js        # Directory traversal, filtering
 │   │   ├── video-stream.js      # Range request handling

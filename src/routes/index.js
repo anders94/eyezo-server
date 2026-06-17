@@ -1,5 +1,13 @@
+const fs = require('fs');
+const path = require('path');
 const { getConfig } = require('../services/database');
 const { DB_PATH } = require('../config/database');
+
+// Web UI served to browsers at the root URL. Read once at startup.
+const indexHtml = fs.readFileSync(
+  path.join(__dirname, '..', '..', 'public', 'index.html'),
+  'utf8'
+);
 
 async function routes(fastify, options) {
   // Health check endpoint
@@ -26,8 +34,12 @@ async function routes(fastify, options) {
     return config;
   });
 
-  // Root redirect
+  // Root: serve the web UI to browsers, JSON descriptor to API clients.
   fastify.get('/', async (request, reply) => {
+    const accept = request.headers.accept || '';
+    if (accept.includes('text/html')) {
+      return reply.type('text/html').send(indexHtml);
+    }
     return {
       message: 'Eyezo Server API',
       version: '1.0.0',
