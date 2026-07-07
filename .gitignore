@@ -19,6 +19,9 @@ desktop.ini
 .env
 .env.local
 .env.*.local
+env/
+log/
+run
 
 # IDE
 .vscode/
@@ -35,3 +38,4 @@ test-videos/
 *.sqlite
 *.sqlite-journal
 *.db
+.local/
