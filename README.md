@@ -33,12 +33,18 @@ To run with Docker, all you need is [Docker](https://docs.docker.com/get-docker/
 
 ## Usage
 
-### Quick Start (npx)
+### Quick Start
 
 Run the server directly without installing — npx downloads it on first use:
 
 ```bash
 npx eyezo /path/to/your/videos
+```
+
+Or with Docker, no Node.js or FFmpeg needed (see [Docker](#docker)):
+
+```bash
+docker run -d -p 3000:3000 -v /path/to/your/videos:/videos:ro -v eyezo-data:/home/node/.local/eyezo-server anders94/eyezo-server
 ```
 
 ### Installation
@@ -63,41 +69,61 @@ PORT=8080 HOST=localhost node eyezo.js /path/to/your/videos
 
 ### Docker
 
-The Docker image bundles Node.js and FFmpeg, so you don't need either one on the host. The image isn't published to a registry, so clone the repository and build it locally:
+A prebuilt image is published on Docker Hub as [`anders94/eyezo-server`](https://hub.docker.com/r/anders94/eyezo-server) for `linux/amd64` and `linux/arm64`. It bundles Node.js and FFmpeg, so you don't need either one on the host.
 
 ```bash
-git clone https://github.com/anders94/eyezo-server.git
-cd eyezo-server
-```
-
-Both options below build the image from this checkout.
-
-#### Docker Compose
-
-```bash
-VIDEO_DIR=/path/to/your/videos docker compose up -d --build
-```
-
-Then open http://localhost:3000/. To publish the server on a different host port, set `PORT`:
-
-```bash
-VIDEO_DIR=/path/to/your/videos PORT=8080 docker compose up -d --build
-```
-
-You can also put `VIDEO_DIR` and `PORT` in a `.env` file next to `docker-compose.yml`.
-
-#### Plain Docker
-
-```bash
-docker build -t eyezo-server .
-
 docker run -d --name eyezo --init \
   -p 3000:3000 \
   -v /path/to/your/videos:/videos:ro \
   -v eyezo-data:/home/node/.local/eyezo-server \
   --restart unless-stopped \
-  eyezo-server
+  anders94/eyezo-server
 ```
+
+Then open http://localhost:3000/. To use a different host port, change the left side of the `-p` mapping (e.g. `-p 8080:3000`).
+
+To update to the latest release:
+
+```bash
+docker pull anders94/eyezo-server
+docker rm -f eyezo
+# then run the docker run command above again
+```
+
+The database and thumbnails live in the `eyezo-data` volume, so they survive the update.
+
+#### Docker Compose
+
+Download the Compose file (no need to clone the repository) and start it:
+
+```bash
+curl -O https://raw.githubusercontent.com/anders94/eyezo-server/main/docker-compose.yml
+VIDEO_DIR=/path/to/your/videos docker compose up -d
+```
+
+To use a different host port, set `PORT`:
+
+```bash
+VIDEO_DIR=/path/to/your/videos PORT=8080 docker compose up -d
+```
+
+You can also put `VIDEO_DIR` and `PORT` in a `.env` file next to `docker-compose.yml`. To update to the latest release:
+
+```bash
+docker compose pull && VIDEO_DIR=/path/to/your/videos docker compose up -d
+```
+
+#### Building the Image from Source
+
+To build the image yourself instead of pulling it, clone the repository and build it:
+
+```bash
+git clone https://github.com/anders94/eyezo-server.git
+cd eyezo-server
+VIDEO_DIR=/path/to/your/videos docker compose up -d --build
+```
+
+Or with plain Docker, run `docker build -t anders94/eyezo-server .`, then use the `docker run` command above.
 
 #### Container Layout
 

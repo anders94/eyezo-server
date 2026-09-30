@@ -1,7 +1,7 @@
 services:
   eyezo:
     build: .
-    image: eyezo-server
+    image: anders94/eyezo-server:latest
     container_name: eyezo
     restart: unless-stopped
     init: true
