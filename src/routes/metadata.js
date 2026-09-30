@@ -5,7 +5,7 @@ const { NotFoundError } = require('../utils/error-handler');
 const { isVideoFile } = require('../utils/mime-types');
 const { extractAndCacheMetadata } = require('../services/metadata');
 const { generateAndCacheThumbnail } = require('../services/thumbnail');
-const { getVideoMetadata, startScan, completeScan } = require('../services/database');
+const { getVideoMetadata, hasExtractedMetadata, startScan, completeScan } = require('../services/database');
 const { browseDirectory } = require('../services/filesystem');
 
 async function routes(fastify, options) {
@@ -43,9 +43,9 @@ async function routes(fastify, options) {
     let metadata = getVideoMetadata(db, relativePath);
 
     // If not cached, extract and cache it
-    if (!metadata) {
+    if (!hasExtractedMetadata(metadata)) {
       try {
-        const extractedMetadata = await extractAndCacheMetadata(db, absolutePath, relativePath);
+        await extractAndCacheMetadata(db, absolutePath, relativePath);
         metadata = getVideoMetadata(db, relativePath);
       } catch (error) {
         request.log.error({ err: error, video: relativePath }, 'Failed to extract metadata');
@@ -120,7 +120,7 @@ async function scanDirectory(videoRoot, absolutePath, relativePath, db) {
 
     // Extract metadata if not already cached
     const metadata = getVideoMetadata(db, video.relativePath);
-    if (!metadata) {
+    if (!hasExtractedMetadata(metadata)) {
       try {
         await extractAndCacheMetadata(db, video.path, video.relativePath);
       } catch (error) {

@@ -23,6 +23,8 @@ A lightweight, standards-driven Node.js video server that serves video files fro
 
 ## Prerequisites
 
+To run with Docker, all you need is [Docker](https://docs.docker.com/get-docker/) (see [Docker](#docker)). Otherwise:
+
 - Node.js 16+
 - FFmpeg installed on your system
   - macOS: `brew install ffmpeg`
@@ -58,6 +60,48 @@ The server will start on port 3000 by default. You can customize the port and ho
 ```bash
 PORT=8080 HOST=localhost node eyezo.js /path/to/your/videos
 ```
+
+### Docker
+
+The Docker image bundles Node.js and FFmpeg, so you don't need either one on the host.
+
+#### Docker Compose
+
+```bash
+VIDEO_DIR=/path/to/your/videos docker compose up -d
+```
+
+Then open http://localhost:3000/. To publish the server on a different host port, set `PORT`:
+
+```bash
+VIDEO_DIR=/path/to/your/videos PORT=8080 docker compose up -d
+```
+
+You can also put `VIDEO_DIR` and `PORT` in a `.env` file next to `docker-compose.yml`.
+
+#### Plain Docker
+
+```bash
+docker build -t eyezo-server .
+
+docker run -d --name eyezo --init \
+  -p 3000:3000 \
+  -v /path/to/your/videos:/videos:ro \
+  -v eyezo-data:/home/node/.local/eyezo-server \
+  --restart unless-stopped \
+  eyezo-server
+```
+
+#### Container Layout
+
+| Path in container | Purpose |
+|---|---|
+| `/videos` | Your video library. Mount it read-only (`:ro`); the server never writes to it. |
+| `/home/node/.local/eyezo-server` | SQLite database and thumbnail cache. Use a named volume (the default `eyezo-data`) or a host directory so they persist across container restarts. |
+
+The container runs as the unprivileged `node` user (UID 1000), so the video directory must be readable by that UID. If you bind-mount a host directory for the data volume instead of using a named volume, it must be writable by UID 1000.
+
+The image includes a health check against `/api/health`. The `PORT` and `HOST` environment variables work the same way as outside Docker, but you'll rarely need to change them in the container; change the host side of the `-p` mapping instead.
 
 ### Development Mode (Auto-reload)
 
@@ -425,6 +469,9 @@ eyezo-server/
 ├── package.json
 ├── README.md
 ├── .gitignore
+├── Dockerfile                   # Container image (Node.js + FFmpeg)
+├── docker-compose.yml           # Compose setup with video + data volumes
+├── .dockerignore
 ├── eyezo.js                     # Entry point
 ├── public/
 │   └── index.html               # Built-in web UI (served at /)

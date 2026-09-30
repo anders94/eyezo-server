@@ -1,0 +1,17 @@
+services:
+  eyezo:
+    build: .
+    image: eyezo-server
+    container_name: eyezo
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      # Your video library, mounted read-only
+      - ${VIDEO_DIR:?Set VIDEO_DIR to the path of your video directory}:/videos:ro
+      # Database + thumbnail cache
+      - eyezo-data:/home/node/.local/eyezo-server
+
+volumes:
+  eyezo-data:

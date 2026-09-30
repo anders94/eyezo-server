@@ -62,9 +62,7 @@ async function extractAndCacheMetadata(db, videoPath, relativePath) {
       width: metadata.width,
       height: metadata.height,
       codec: metadata.codec,
-      bitrate: metadata.bitrate,
-      hasThumbnail: false,
-      thumbnailPath: null
+      bitrate: metadata.bitrate
     });
 
     return metadata;

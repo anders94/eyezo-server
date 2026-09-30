@@ -1,5 +1,11 @@
 // Database service for video metadata operations
 
+// A videos row can be created by thumbnail generation or watch progress before
+// metadata has been extracted; last_scanned is only set by metadata extraction.
+function hasExtractedMetadata(row) {
+  return Boolean(row) && row.last_scanned != null;
+}
+
 // Get video metadata by relative path
 function getVideoMetadata(db, relativePath) {
   return db.prepare(`
@@ -20,17 +26,15 @@ function upsertVideoMetadata(db, data) {
     width,
     height,
     codec,
-    bitrate,
-    hasThumbnail,
-    thumbnailPath
+    bitrate
   } = data;
 
   return db.prepare(`
     INSERT INTO videos (
       relative_path, absolute_path, file_size, modified_time,
       duration, width, height, codec, bitrate,
-      has_thumbnail, thumbnail_path, last_scanned, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch(), unixepoch())
+      last_scanned, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch(), unixepoch())
     ON CONFLICT(relative_path) DO UPDATE SET
       absolute_path = excluded.absolute_path,
       file_size = excluded.file_size,
@@ -40,8 +44,6 @@ function upsertVideoMetadata(db, data) {
       height = excluded.height,
       codec = excluded.codec,
       bitrate = excluded.bitrate,
-      has_thumbnail = excluded.has_thumbnail,
-      thumbnail_path = excluded.thumbnail_path,
       last_scanned = excluded.last_scanned,
       updated_at = excluded.updated_at
   `).run(
@@ -53,9 +55,7 @@ function upsertVideoMetadata(db, data) {
     width,
     height,
     codec,
-    bitrate,
-    hasThumbnail ? 1 : 0,
-    thumbnailPath
+    bitrate
   );
 }
 
@@ -183,6 +183,7 @@ function clearWatchProgress(db, relativePath) {
 }
 
 module.exports = {
+  hasExtractedMetadata,
   getVideoMetadata,
   upsertVideoMetadata,
   updateThumbnailStatus,
