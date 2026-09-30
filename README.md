@@ -63,18 +63,25 @@ PORT=8080 HOST=localhost node eyezo.js /path/to/your/videos
 
 ### Docker
 
-The Docker image bundles Node.js and FFmpeg, so you don't need either one on the host.
+The Docker image bundles Node.js and FFmpeg, so you don't need either one on the host. The image isn't published to a registry, so clone the repository and build it locally:
+
+```bash
+git clone https://github.com/anders94/eyezo-server.git
+cd eyezo-server
+```
+
+Both options below build the image from this checkout.
 
 #### Docker Compose
 
 ```bash
-VIDEO_DIR=/path/to/your/videos docker compose up -d
+VIDEO_DIR=/path/to/your/videos docker compose up -d --build
 ```
 
 Then open http://localhost:3000/. To publish the server on a different host port, set `PORT`:
 
 ```bash
-VIDEO_DIR=/path/to/your/videos PORT=8080 docker compose up -d
+VIDEO_DIR=/path/to/your/videos PORT=8080 docker compose up -d --build
 ```
 
 You can also put `VIDEO_DIR` and `PORT` in a `.env` file next to `docker-compose.yml`.
