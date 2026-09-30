@@ -505,6 +505,8 @@ eyezo-server/
 ├── Dockerfile                   # Container image (Node.js + FFmpeg)
 ├── docker-compose.yml           # Compose setup with video + data volumes
 ├── .dockerignore
+├── .github/workflows/
+│   └── docker-publish.yml       # Publishes the Docker image on version tags
 ├── eyezo.js                     # Entry point
 ├── public/
 │   └── index.html               # Built-in web UI (served at /)

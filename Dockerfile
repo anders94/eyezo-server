@@ -11,6 +11,14 @@ RUN npm ci --omit=dev --no-audit --no-fund
 
 # ---- Runtime stage ----
 FROM node:22-bookworm-slim
+
+LABEL org.opencontainers.image.title="Eyezo Server" \
+      org.opencontainers.image.description="Lightweight video server that serves a directory tree via a web UI and REST API with HTTP range support" \
+      org.opencontainers.image.source="https://github.com/anders94/eyezo-server" \
+      org.opencontainers.image.url="https://github.com/anders94/eyezo-server" \
+      org.opencontainers.image.documentation="https://github.com/anders94/eyezo-server#readme" \
+      org.opencontainers.image.licenses="MIT"
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ffmpeg \
  && rm -rf /var/lib/apt/lists/*
